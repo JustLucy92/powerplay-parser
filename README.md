@@ -262,6 +262,8 @@ Runs three steps in sequence:
 2. **In-game capture** — launches `auto_capture.py`; switch to Elite Dangerous when prompted
 3. **Upload** — pushes UM, RF, timestamp, and CP-bar images in batches of 10 to avoid Apps Script timeouts. Systems whose UM and RF match what the sheet already holds only get their timestamp refreshed ("last checked") — values and images are not re-sent, which keeps the upload fast when little has changed.
 
+   **BGS States:** while `auto_capture.py` takes the screenshots it also looks up each system's BGS states from EDSM in a background thread (about 1–2 requests per system, 1 s apart, so it finishes well before the capture does). The upload then fills the `BGS States` column (found by its header text) of the cycle tab, e.g. `Boom | Pending: Expansion` or `None | Other: Election | 2nd: Boom`. Only the controlling faction is shown, plus the first-slot states (Boom, Bust, Investment, Expansion, Civil Liberty) of a secondary faction that owns a large-pad port in an Industrial, Refinery, High Tech or Tourism economy. If EDSM is unreachable the column is simply left as it is. Requires redeploying `antal_priorities_updater.gs` (Manage deployments → New version).
+
 During steps 2 and 3, cell A1 of the sheet shows **⏳ Update in progress…** (yellow) so team members can see that an update is underway. It is cleared automatically when the upload completes. The status cell row/column can be changed via `STATUS_ROW`/`STATUS_COL` in `antal_priorities_updater.gs`.
 
 **Acquisitions tab:**

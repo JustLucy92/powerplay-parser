@@ -48,6 +48,7 @@ import requests
 import cv2
 
 from summarize_powers import parse_powerplay_file, get_cycle_number
+from bgs_states import load_bgs_states
 import config
 import credentials
 
@@ -478,6 +479,9 @@ def update_sheet(system_map, data_timestamp, sheet_name, update_images=True,
     print(f"  {len(sheet_systems)} system(s) to process")
     print()
 
+    # BGS states looked up from EDSM during capture (cycle tab only)
+    bgs_map = {} if (images_only or sheet_name == ACQUISITIONS_SHEET) else load_bgs_states()
+
     # Build the payload
     payload   = []
     unmatched = []
@@ -514,6 +518,9 @@ def update_sheet(system_map, data_timestamp, sheet_name, update_images=True,
                         entry['bar_width']  = img_w
                         entry['bar_height'] = img_h
 
+        if system_name.lower() in bgs_map:
+            entry['bgs'] = bgs_map[system_name.lower()]
+
         payload.append(entry)
 
         has_img = 'bar_b64' in entry
@@ -532,6 +539,8 @@ def update_sheet(system_map, data_timestamp, sheet_name, update_images=True,
     if not images_only:
         print(f"Matched: {len(payload)} / {len(sheet_systems)}"
               + (f"  ({skipped} unchanged, timestamp only)" if skipped else ''))
+        if bgs_map:
+            print(f"BGS states attached: {sum('bgs' in e for e in payload)}")
         if unmatched:
             print(f"Not in capture ({len(unmatched)}): {', '.join(unmatched[:5])}"
                   + (f' … +{len(unmatched) - 5}' if len(unmatched) > 5 else ''))

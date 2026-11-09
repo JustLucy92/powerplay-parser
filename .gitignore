@@ -48,3 +48,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# EDSM BGS lookup handed from auto_capture.py to update_google_sheet.py
+bgs_states.json

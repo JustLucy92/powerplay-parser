@@ -21,6 +21,7 @@ import winsound
 
 # Local imports
 from powerplay_ocr import PowerplayOCR
+import bgs_states
 import config
 import credentials
 
@@ -787,6 +788,9 @@ def main():
         time.sleep(1)
     print("\nStarting automation...                ")
     print("=" * 80)
+
+    print("Fetching BGS states from EDSM in the background …")
+    bgs_states.start_background_fetch(system_names)
 
     ocr = PowerplayOCR()
 

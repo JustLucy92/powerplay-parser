@@ -18,7 +18,8 @@
  *                                          plus current UM/RF per system (for change detection)
  *   GET  ?token=...&ping=1               → returns {ok:true} without opening the spreadsheet;
  *                                          used to wake the script up before real requests
- *   POST (JSON body, systems=[...])      → updates UM, RF, timestamp, and CP bar images
+ *   POST (JSON body, systems=[...])      → updates UM, RF, timestamp, BGS states ("BGS States"
+ *                                          column, found by its header), and CP bar images
  *   POST (JSON body, set_status="...")   → writes/clears the update-status indicator cell
  */
 
@@ -97,6 +98,11 @@ function doPost(e) {
 
     var values = sheet.getDataRange().getValues();
 
+    // Column of the "BGS States" header, found by name so inserting columns doesn't break it.
+    var bgsCol = values.length
+      ? values[0].map(function (h) { return String(h).trim().toLowerCase(); }).indexOf('bgs states')
+      : -1;
+
     // Build lowercase name → 1-based row number map from the current sheet
     var rowMap = {};
     for (var i = 1; i < values.length; i++) {
@@ -120,6 +126,14 @@ function doPost(e) {
       if (sys.timestamp !== undefined) sheet.getRange(rowNum, COL_TIMESTAMP).setValue(new Date(sys.timestamp));
       if (sys.um        !== undefined) sheet.getRange(rowNum, COL_UM).setValue(sys.um);
       if (sys.rf        !== undefined) sheet.getRange(rowNum, COL_RF).setValue(sys.rf);
+
+      if (sys.bgs !== undefined && bgsCol >= 0 && values[rowNum - 1][bgsCol] !== sys.bgs) {
+        try {
+          sheet.getRange(rowNum, bgsCol + 1).setValue(sys.bgs);
+        } catch (bgsErr) {
+          Logger.log('BGS write failed for ' + sys.name + ': ' + bgsErr.message);
+        }
+      }
 
       if (sys.bar_b64) {
         try {
